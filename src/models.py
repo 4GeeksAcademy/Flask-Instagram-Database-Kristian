@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Boolean, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 db = SQLAlchemy()
 
@@ -10,10 +10,27 @@ class User(db.Model):
     password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
 
+    follower: Mapped[list['Follower']]= relationship(back_populates= 'user_from_id')
+    follows: Mapped[list['Follower']]= relationship(back_populates= 'user_to_id')
+
 
     def serialize(self):
         return {
             "id": self.id,
             "email": self.email,
             # do not serialize the password, its a security breach
+        }
+
+class Follower(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_from_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    user_to_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    follower: Mapped['User']= relationship(back_populates= 'follower')
+    follows: Mapped['User']= relationship(back_populates= 'follows')
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_from_id": self.user_from_id,
+            "user_to_id": self.user_to_id
         }
