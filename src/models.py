@@ -12,8 +12,8 @@ class User(db.Model):
 
     following: Mapped[list['Follower']]= relationship(back_populates= 'user_from_id')
     followers: Mapped[list['Follower']]= relationship(back_populates= 'user_to_id')
-    post: Mapped[list['Post']]= relationship(back_populates= 'user_post')
-    comment: Mapped[list['Comment']]= relationship(back_populates= 'user_comment')
+    posts: Mapped[list['Post']]= relationship(back_populates= 'user_post')
+    comments: Mapped[list['Comment']]= relationship(back_populates= 'user_comment')
 
 
     def serialize(self):
@@ -27,8 +27,8 @@ class Follower(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_from_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
     user_to_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
-    follower_user: Mapped['User']= relationship(back_populates= 'following')
-    followed_user: Mapped['User']= relationship(back_populates= 'followers')
+    follower_user: Mapped['User']= relationship(back_populates= 'following', foreign_keys=[user_from_id])
+    followed_user: Mapped['User']= relationship(back_populates= 'followers', foreign_keys=[user_to_id])
 
     def serialize(self):
         return {
@@ -40,9 +40,9 @@ class Follower(db.Model):
 class Post(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
-    user_post: Mapped['User'] = relationship(back_populates= 'post')
+    user_post: Mapped['User'] = relationship(back_populates= 'posts')
     post_media: Mapped['Media'] = relationship(back_populates= 'media_post')
-    comment_post: Mapped['Comment'] = relationship(back_populates= '')
+    comment_post: Mapped['Comment'] = relationship(back_populates= 'post_comment')
 
     def serialize(self):
         return {
@@ -68,7 +68,7 @@ class Comment(db.Model):
     comment_text: Mapped[str] = mapped_column(String(), nullable=False)
     author_id: Mapped[str] = mapped_column(ForeignKey('user.id'))
     post_id: Mapped[str] = mapped_column(ForeignKey('post.id'))
-    user_comment: Mapped['User'] = relationship(back_populates= 'comment')
+    user_comment: Mapped['User'] = relationship(back_populates= 'comments')
     post_comment: Mapped['Post'] = relationship(back_populates= 'comment_post')
 
     def serialize(self):
